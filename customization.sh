@@ -14,9 +14,9 @@ DNS=$5
 
 if [ -z "$SUDO_COMMAND" ]
 then
-  /sbin/ip a a $HOSTNAME/$SUBNET dev eth0
-  /sbin/ip link set dev eth0 up
-  /sbin/ip r a default via $GATEWAY
+  sudo /sbin/ip a a $IP/$SUBNET dev eth0
+  sudo /sbin/ip link set dev eth0 up
+  sudo /sbin/ip r a default via $GATEWAY
   echo "doing git update"
   ( cd vmware-bootstrap-puppet/ && git pull )
   echo "relaunching with elevated previliges"
