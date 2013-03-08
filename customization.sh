@@ -60,6 +60,6 @@ echo "$IP      $HOSTNAME" >> /etc/hosts
 
 exit 0
 #Actually enable puppet to start on next boot
-[ -e /tmp/dontenablepuppet ] || sed -i -e 's/no/yes/' /etc/default/puppet
+[ -e /tmp/dontenablepuppet ] || sed -i -e 's/=no/=yes/' /etc/default/puppet
 
 reboot
