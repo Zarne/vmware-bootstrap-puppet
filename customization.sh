@@ -1,8 +1,10 @@
 #!/bin/bash
 
 #Redirect stdout and stderr
-exec >  /tmp/customization.log
-exec 2> /tmp/customization.err
+#We need to append to logs, to get output from both
+#parent process and child process
+exec >>  customization.log
+exec 2>> customization.err
 
 HOSTNAME=$1
 IP=$2
@@ -10,10 +12,22 @@ SUBNET=$3
 GATEWAY=$4
 DNS=$5
 
+if [ -z "$SUDO_COMMAND" ]
+then
+  /sbin/ip a a $HOSTNAME/$SUBNET dev eth0
+  /sbin/ip link set dev eth0 up
+  /sbin/ip r a default via $GATEWAY
+  echo "doing git update"
+  ( cd vmware-bootstrap-puppet/ && git pull )
+  echo "relaunching with elevated previliges"
+  sudo $0 $*
+  exit 0
+fi
+
 rm -rf /etc/udev/rules.d/70-persistent-net.rules
 
 echo $HOSTNAME > /etc/hostname
-cat > /etc/network/interfaces <<EOF
+/bin/cat > /etc/network/interfaces <<EOF
 # This file describes the network interfaces available on your system
 # and how to activate them. For more information, see interfaces(5).
 
@@ -31,18 +45,20 @@ iface eth0 inet static
 	dns-nameservers DNSHERE
 EOF
 
-sed -e "s/IPHERE/$2/g"\
+/bin/sed -e "s/IPHERE/$2/g"\
     -e "s/SUBNETHERE/$3/g"\
     -e "s/GWHERE/$4/g"\
     -e "s/DNSHERE/$5/g"       -i /etc/network/interfaces
 
-#Just really make sure puppet is stopped before bringing up network
-sudo /etc/init.d/puppet stop
-sudo /etc/init.d/networking restart
-
 export DEBIAN_FRONTEND=noninteractive
-sudo apt-get update && sudo apt-get -o Dpkg::Options::="--force-confold" dist-upgrade -y
+apt-get update && apt-get -o Dpkg::Options::="--force-confold" dist-upgrade -y
 
+# Delete temp template hostname
+/bin/sed '/127.0.1.1       kimo kimo.sw.in/d' -i /etc/hosts
+# Add real hostname
+echo "$IP      $HOSTNAME" >> /etc/hosts
+
+exit 0
 #Actually enable puppet to start on next boot
 [ -e /tmp/dontenablepuppet ] || sed -i -e 's/no/yes/' /etc/default/puppet
 
