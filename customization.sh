@@ -54,11 +54,10 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update && apt-get -o Dpkg::Options::="--force-confold" dist-upgrade -y
 
 # Delete temp template hostname
-/bin/sed '/127.0.1.1       kimo kimo.sw.in/d' -i /etc/hosts
+/bin/sed '/127.0.1.1.*kimo.sw.in/d' -i /etc/hosts
 # Add real hostname
 echo "$IP      $HOSTNAME" >> /etc/hosts
 
-exit 0
 #Actually enable puppet to start on next boot
 [ -e /tmp/dontenablepuppet ] || sed -i -e 's/=no/=yes/' /etc/default/puppet
 
