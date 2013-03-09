@@ -1,4 +1,5 @@
 #!/bin/bash
+set -ex
 
 #Redirect stdout and stderr
 #We need to append to logs, to get output from both
@@ -61,4 +62,4 @@ echo "$IP      $HOSTNAME" >> /etc/hosts
 #Actually enable puppet to start on next boot
 [ -e /tmp/dontenablepuppet ] || sed -i -e 's/=no/=yes/' /etc/default/puppet
 
-reboot
+reboot &
